@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Be Verb Quiz</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2f7f5;--card:#fff;--ink:#2c3e3a;--mut:#647a75;--acc:#3f7f7b;--ok:#3a8a65;--okbg:#e1f2e9;--bad:#c2705f;--line:#d3e2dd;--t1:#6f9fd1;--t2:#e0a86a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b2624;--card:#25312e;--ink:#e6efec;--mut:#9db3ad;--acc:#4a9d98;--ok:#7fd1a4;--okbg:#22402f;--bad:#e89a8a;--line:#37483f;--t1:#4f7fae;--t2:#b0803f}}
+:root[data-theme="dark"]{--bg:#1b2624;--card:#25312e;--ink:#e6efec;--mut:#9db3ad;--acc:#4a9d98;--ok:#7fd1a4;--okbg:#22402f;--bad:#e89a8a;--line:#37483f;--t1:#4f7fae;--t2:#b0803f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;line-height:1.4}
+main{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:1.7rem;margin:4px 0 12px;text-align:center}h1 span{color:var(--acc)}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:1.2rem;margin-bottom:10px}
+.bar{height:12px;background:var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:12px}
+.tile{aspect-ratio:1.15;font-size:2.4rem;border-radius:18px;background:var(--acc);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18);font-weight:bold}
+.tile:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.tile.used{background:var(--card);color:var(--mut);box-shadow:none;border:2px dashed var(--line);font-size:1.4rem;cursor:default}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 18px;color:#fff;background:var(--acc);font-weight:bold}
+#ov{position:fixed;inset:0;background:rgba(20,30,28,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.hide{display:none!important}
+.modal{background:var(--card);border-radius:22px;width:100%;max-width:760px;padding:22px;position:relative;max-height:100%;overflow:auto}
+.modal .x{position:absolute;top:10px;right:10px;background:none;color:var(--mut);font-size:1.4rem;padding:4px 10px}
+.num{color:var(--acc);font-weight:bold}
+.q{font-size:clamp(1.4rem,4.5vw,2.2rem);line-height:2.1;margin:14px 0}
+.bl{display:inline-block;min-width:110px;border-bottom:4px solid var(--ink);text-align:center;margin:0 4px;font-weight:bold;color:transparent;padding:0 8px}
+.bank{color:var(--mut);font-size:.9rem;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.bl{cursor:pointer}.bl.filled{color:var(--ink)}.bl.good{color:var(--ok);border-color:var(--ok);background:var(--okbg);border-radius:6px 6px 0 0}.bl.badw{color:var(--bad);border-color:var(--bad);animation:sh .3s}@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.words{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0}.words button{background:var(--card);color:var(--ink);border:3px solid var(--acc);font-size:1.2rem;padding:10px 16px}.words button:active{background:var(--okbg)}
+.sf{border:3px dashed var(--acc);border-radius:16px;padding:12px;margin:10px 0;text-align:center}.sf b{color:var(--acc)}.sf .words button{font-size:1.05rem}.fb{text-align:center;font-weight:bold;font-size:1.2rem;min-height:1.6em;margin:8px 0}
+.big{text-align:center;font-size:3rem}
+</style></head><body><main>
+<h1>BE <span>VERB</span> Quiz</h1>
+<div class="hud"><span id="prog"></span><span id="sc">⭐ 0</span></div>
+<div class="bar"><i id="pb"></i></div>
+<div class="grid" id="grid"></div>
+
+<div id="ov" class="hide"><div class="modal">
+ <button class="x" id="close" aria-label="Close">✕</button>
+ <div class="num" id="qn"></div>
+ <div class="q" id="q"></div>
+ <div class="words" id="words"></div>
+ <div class="fb" id="fb"></div>
+ <div class="sf hide" id="sf"></div>
+ <div class="row"><button id="done" class="hide">Back to the numbers ➜</button></div>
+</div></div>
+
+<div id="end" class="hide" style="text-align:center;margin-top:20px"><div class="big">🏆</div><h2 id="win"></h2><button id="again">Play again</button></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const Qs=[
+ ['I am from Canada and my classmate __ from Egypt.',['is']],
+ ['A: __ your brother a teacher? B: Yes, he __.',['Is','is']],
+ ['Sarah and Jane __ at the restaurant.',['are']],
+ ['They __ at work right now. Where __ they?',['are not','are']],
+ ['A: __ I late? B: No, you __.',['Am','are not']],
+ ['Paris __ the capital city of France.',['is']],
+ ['These cookies __ really delicious!',['are']],
+ ['Where __ your classmates? __ they in the cafeteria?',['are','Are']],
+ ['I __ twenty-two years old. How old __ you?',['am','are']],
+ ['Their names __ Susan and Jennifer.',['are']],
+ ['A: __ you William? B: No, I __.',['Are','am not']],
+ ['Grammar is easy. It __ difficult.',['is not']],
+ ['Elephants __ very big animals.',['are']],
+ ['A: What time __ it? B: It __ three o’clock.',['is','is']],
+ ['I __ very hungry. Let’s go eat!',['am']],
+ ['The students __ in the classroom. Where __ the teacher?',['are','is']],
+ ['A: __ she your sister? B: No, she __.',['Is','is not']],
+ ['We __ late for class. We are early!',['are not']],
+ ['A: __ they your friends? B: Yes, they __.',['Are','are']],
+ ['My name __ Tom, and I __ a student.',['is','am']]
+];
+const BANK=[
+['am','are','is','is not','are not'],
+['Is','Are','Am','is','are'],
+['am','are','is','are not','is not'],
+['am not','are not','is not','are','is'],
+['Am','Are','Is','are not','is not'],
+['am','are','is','is not','are not'],
+['am','are','is','are not','is not'],
+['are','is','am','Are','Is'],
+['am','are','is','am not','are not'],
+['am','are','is','are not','is not'],
+['Are','Is','Am','am not','are not'],
+['is','are','am not','are not','is not'],
+['am','are','is','are not','is not'],
+['am','are','is','is not','are not'],
+['am','are','is','am not','is not'],
+['am','are','is','are not','is not'],
+['Is','Are','Am','is not','are not'],
+['am not','are not','is not','are','is'],
+['Are','Is','Am','are','is'],
+['am','are','is','am not','is not']];
+const SF={3:{l:'They are not',o:['They aren’t','They’re not','They isn’t','They amn’t'],g:[0,1]},
+ 4:{l:'you are not',o:['you aren’t','you’re not','you isn’t','you amn’t'],g:[0,1]},
+ 10:{l:'I am not',o:['I’m not','I amn’t','I aren’t','I isn’t'],g:[0]},
+ 11:{l:'It is not',o:['It isn’t','It’s not','It aren’t','It amn’t'],g:[0,1]},
+ 16:{l:'she is not',o:['she isn’t','she’s not','she aren’t','she amn’t'],g:[0,1]},
+ 17:{l:'We are not',o:['We aren’t','We’re not','We isn’t','We amn’t'],g:[0,1]}};
+let bonus=0;
+let sc,used,cur,tries,fill;
+function draw(){
+ $('grid').innerHTML=Qs.map((_,i)=>used[i]!=null?'<button class="tile used" disabled>✓</button>':'<button class="tile" data-i="'+i+'">'+(i+1)+'</button>').join('');
+ const n=used.filter(x=>x!=null).length;
+ $('prog').textContent='Pick a number! ('+n+' / 20 done)';$('sc').textContent='⭐ '+sc;$('pb').style.width=(n/20*100)+'%';
+}
+function init(){sc=0;bonus=0;used=Array(20).fill(null);$('end').classList.add('hide');$('grid').classList.remove('hide');draw()}
+$('grid').onclick=e=>{const b=e.target.closest('.tile');if(!b||b.disabled)return;open(+b.dataset.i)};
+function open(i){
+ cur=i;tries=0;const [s,a]=Qs[i];fill=a.map(()=>null);
+ $('qn').textContent='Number '+(i+1);
+ $('q').innerHTML=s.split('__').map((p,j)=>p+(j<a.length?'<span class="bl" data-j="'+j+'">&nbsp;</span>':'')).join('');
+ $('words').innerHTML=BANK[i].map(w=>'<button>'+w+'</button>').join('');
+ $('fb').textContent='Click the correct word!';$('done').classList.add('hide');$('sf').classList.add('hide');$('ov').classList.remove('hide');
+}
+const blanks=()=>[...document.querySelectorAll('.bl')];
+function paint(){blanks().forEach((b,j)=>{b.textContent=fill[j]||'\u00a0';b.classList.toggle('filled',!!fill[j])})}
+$('words').onclick=e=>{const b=e.target.closest('button');if(!b||!$('done').classList.contains('hide'))return;
+ const j=fill.indexOf(null);if(j<0)return;fill[j]=b.textContent;paint();if(fill.indexOf(null)<0)grade()};
+$('q').onclick=e=>{const b=e.target.closest('.bl');if(b&&$('done').classList.contains('hide')){fill[+b.dataset.j]=null;paint()}};
+function grade(){
+ const ans=Qs[cur][1];tries++;
+ const ok=fill.map((f,j)=>f===ans[j]);
+ blanks().forEach((b,j)=>b.classList.add(ok[j]?'good':'badw'));
+ if(ok.every(Boolean)){
+  const pts=tries==1?10:5;sc+=pts;used[cur]=tries;
+  $('fb').textContent='🎉 Correct! +'+pts;$('done').classList.remove('hide');draw();
+  const f=SF[cur];if(f){$('sf').innerHTML='⭐ <b>Bonus (+5):</b> What is the short form of “'+f.l+'”?<div class="words">'+f.o.map((o,k)=>'<button data-k="'+k+'">'+o+'</button>').join('')+'</div><div id="sfm"></div>';$('sf').classList.remove('hide')}
+ }else{
+  $('fb').textContent='Not quite… try again!';
+  setTimeout(()=>{fill=fill.map((f,j)=>ok[j]?f:null);blanks().forEach(b=>b.classList.remove('badw'));paint()},900);
+ }
+}
+$('sf').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const f=SF[cur];
+ if(f.g.includes(+b.dataset.k)){bonus+=5;sc+=5;b.disabled=true;[...$('sf').querySelectorAll('button')].forEach(x=>x.disabled=true);b.style.background='var(--okbg)';$('sfm').textContent='✅ Yes! “'+b.textContent+'” +5';draw()}
+ else{b.disabled=true;b.style.opacity=.4;$('sfm').textContent='Not quite, try another!'}};
+$('done').onclick=()=>{$('ov').classList.add('hide');if(used.every(x=>x!=null))finish()};
+$('close').onclick=()=>$('ov').classList.add('hide');
+function finish(){
+ $('end').classList.remove('hide');$('grid').classList.add('hide');
+ $('win').textContent='Great job, everyone! 🎉 Final score: '+sc+' / 230';
+}
+$('again').onclick=init;
+init();
+</script></body></html>
